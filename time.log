@@ -1,0 +1,24 @@
+ESTIMATE of time to complete assignment: 15 hours
+
+      Time     Time
+Date  Started  Spent Work completed
+----  -------  ----  --------------
+12/03 08:30pm  03:00  develop playable peg solitaire game with default board
+11/10 11:30am  10:00  parameters. this assignment is entirely arbitrary. 
+               ----
+               18:00  TOTAL time spent
+
+Outside Resources: 
+      https://en.wikipedia.org/wiki/A*_search_algorithm     
+            for a* psuedo code
+      https://docs.python.org/3/library/heapq.html#priority-queue-implementation-notes 
+            for pq default implementation (PERSONALLY MODIFIED)
+
+This assignment was extremely challenging as it didn't measure knowledge
+of the algorithm more than raw debugging time. Having to wait 2-ish 
+minutes to see the percentage was demoralizing more than anything. Most of 
+the time debugging wasn't catching that I messed up the algo, but changing
+storage elements and otherwise trying to effectively walk through. Perhaps 
+a smaller mcts game would make for a challenging (in terms of knowlege) but
+much less frustrating pset. The same algo would apply and would need EXACTLY
+as much code, but a smaller game could speed up testing.
