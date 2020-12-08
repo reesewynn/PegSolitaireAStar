@@ -1,0 +1,23 @@
+Test case ...,xx.,.xx.x.x,.xx..x.,xx...xx,.x.,...
+
+real	0m0.275s
+user	0m0.716s
+sys	0m0.625s
+TEST WITH NAIVE BACKTRACK
+
+real	1m9.382s
+user	1m9.657s
+sys	0m0.694s
+
+Test case .xx,x.x,.....x.,..xxxxx,....x.x,.x.,xx.
+
+real	7m31.516s
+user	7m28.751s
+sys	0m2.040s
+TEST WITH NAIVE BACKTRACK
+
+real	4m59.240s
+user	4m58.491s
+sys	0m1.283s
+
+Test case xxx,xxx,xxxxxxx,xxx.xxx,xxxxxxx,xxx,xxx

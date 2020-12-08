@@ -1,14 +1,18 @@
 import numpy as np
 from enum import Enum
 import os
+# Default active board to determine use of pagoda/rotation hashing
+DEFAULT_ACTIVE_BOARD = np.array([[0,0,1,1,1,0,0], 
+                        [0,0,1,1,1,0,0],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,0,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [0,0,1,1,1,0,0],
+                        [0,0,1,1,1,0,0]])
 
 class Solitaire:
-    # DEFAULT_BOARD = "xxx,xxx,xxxxxxx,xxx.xxx,xxxxxxx,xxx"
-    # DEFAULT_BOARD = "...,.x.,.xx....,.......,...,..."
-    # DEFAULT_BOARD = "...,...,..x,.....x...,xx..x....,.........,...,...,..."
-    DEFAULT_BOARD = "...,.xx,x.x,....x.x..,xx..xx.x.,....x.x..,x.x,.x.,..."
+    DEFAULT_BOARD = "xxx,xxx,xxxxxxx,xxx.xxx,xxxxxxx,xxx,xxx"
     
-    init_pos = ""
     board_matrix = []
     active_board = []
     def __init__(self, board_string=None):
@@ -19,7 +23,6 @@ class Solitaire:
         '''
         if board_string == None:
             board_string = self.DEFAULT_BOARD
-        self.init_pos = board_string
         self.captured = 0
         
         # create board_matrix
@@ -61,7 +64,7 @@ class Solitaire:
 
         
     class Position:
-        def __init__(self, board, valid_spots):
+        def __init__(self, board, valid_spots, rotation_hash=False):
             if board is None:
                 raise ValueError('board cannot be None')
             if valid_spots is None:
@@ -74,13 +77,18 @@ class Solitaire:
             self._legal_moves = self._find_legal_moves()
 
             self._pegs_left = np.sum(board)
-            self.hash = self._compute_hash()
+            if not rotation_hash:
+                self.hash = self._compute_hash()
+            else:
+                self.hash = self.recompute_hash_with_rotation()
             
         def get_shape(self):
             return np.shape(self._board)
         
         def get_board(self):
             return self._board
+        def get_valid(self):
+            return self._valid_spots
             
         
         def is_legal(self, x, y, dir):
@@ -88,33 +96,17 @@ class Solitaire:
 
                 p -- the index of a pit in this position
             '''
-            if (not isinstance(dir, Solitaire.Move)):
-                raise ValueError("dir given is not a valid move type")
             dir_x, dir_y = dir.value
             adj_x, adj_y = x + dir_x, y + dir_y
             next_x, next_y = adj_x + dir_x, adj_y + dir_y
 
-            # x bounds
+            
             shape = np.shape(self._board)
             return not ((adj_x < 0 or next_x < 0 or adj_x >= shape[0] or next_x >= shape[0]) \
                 or (adj_y < 0 or next_y < 0 or adj_y >= shape[1] or next_y >= shape[1]) \
                 or (not self._board[x][y] or not self._board[adj_x][adj_y]) \
                 or (self._board[next_x][next_y] or not self._valid_spots[next_x][next_y]))
-            # if (adj_x < 0 or next_x < 0 or adj_x >= shape[0] or next_x >= shape[0]):
-            #     return False
-            # # y bounds
-            # if (adj_y < 0 or next_y < 0 or adj_y >= shape[1] or next_y >= shape[1]):
-            #     return False
-
-            # # self is empty
-            # if (not self._board[x][y] or not self._board[adj_x][adj_y]):
-            #     return False
-            # # next is filled or outside active board
-            # if (self._board[next_x][next_y] or not self._valid_spots[next_x][next_y]):
-            #     return False
             
-            # # all good!
-            # return True
 
         
         def _find_legal_moves(self):
@@ -136,6 +128,10 @@ class Solitaire:
             return self._legal_moves
 
         def update_moves_around(self, move):
+            ''' Updates only potentially changed slots legal moves
+                This should be an improvement over re-calculating every 
+                time
+            '''
             m_x, m_y, dir = move
             d_x, d_y = dir.value
             f_x, f_y = m_x + 2 * d_x, m_y + 2 * d_y
@@ -161,6 +157,9 @@ class Solitaire:
             self._legal_moves = valid_moves
 
         def do_move(self, move):
+            ''' Updates the board with the specified move
+                Returns true if successful, false otherwise
+            '''
             m_x, m_y, dir = move
             d_x, d_y = dir.value
             if (not self.is_legal(m_x, m_y, dir)):
@@ -177,7 +176,9 @@ class Solitaire:
             
 
 
-        def result(self, move):
+        def result(self, move, rotation_hash=False):
+            ''' Returns a new Position object with move applied
+            '''
             m_x, m_y, dir = move
             if (len(move) != 3 or not self.is_legal(m_x, m_y, dir)):
                 raise ValueError("Invalid move")
@@ -227,9 +228,23 @@ class Solitaire:
                 ret += "\n"
             ret += "Pegs Remaining: " + str(self._pegs_left) 
             return ret
+
+        def get_pegs_left(self):
+            return self._pegs_left
         
         def _compute_hash(self):
             return hash(self._board.tostring())
+
+        def recompute_hash_with_rotation(self):
+            # find all four hashes, pick the max. All rotations will hash the same
+            h_1 = self.hash
+            b_2 = np.rot90(self._board)
+            h_2 = hash(b_2.tostring())
+            b_3 = np.rot90(b_2)
+            h_3 = hash(b_3.tostring())
+            b_4 = np.rot90(b_3)
+            h_4 = hash(b_4.tostring())
+            return max([h_1, h_2, h_3, h_4])
 
         def __hash__(self):
             return self.hash
